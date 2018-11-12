@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+  <head>
+    <title>HitWord game</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 8%; background: rgb(146, 79, 3); border: none; padding: 10px;}
+      .playerInfo { text-align: center}
+      .playersOnline { padding-top: 50px}
+      .gameLog { padding-top: 50px}
+      .diedScreen { background-color: #000000 }
+      .diedScreen h1 { color: red}
+      .centre{
+        width: 720px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .no-bullet-points {list-style: none;}
+      #logs { list-style-type: none; margin: 0; padding: 0; }
+      #logs li { padding: 5px 10px; }
+      #logs li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+    <div id="playground">
+    <div class="playerInfo">
+        <h3>you are</h3>
+        <h1>
+          <span id="player_name">unknown</span>
+        </h1>
+        <h2>
+          (HP:<span id="player_hp">0</span>)
+        </h2>
+    </div>
+
+    <div class="playersOnline centre">
+        <h2>Online players</h2>
+        <ul id="players" class="no-bullet-points"></ul>
+    </div>
+    
+    <div class="gameLog centre">
+        <h2>Game log</h2>
+        <ul id="logs"></ul>
+    </div> 
+
+    <form action="">
+      <input id="m" autocomplete="off" placeholder="type enemy hitWord here to attack"/><button>&#128074</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        var socket = io();
+        var punchAudio = new Audio('punch.mp3')
+        var painAudio = new Audio('pain.mp3')
+        var deathAudio = new Audio('death.mp3')
+
+        function log(text){
+          $('#logs').append($('<li>').text(text));
+        }
+
+        function setHP(hp){
+          $('#player_hp').text(hp)
+        }
+
+        function setName(name){
+          $('#player_name').text(name)
+        }
+
+        function processRegisterNewPlayerSuccess(msg){
+          setName(msg.payload.name)
+          setHP(msg.payload.hp)
+          log(msg.payload.text)
+        }      
+
+        function processHitSuccess(msg){
+          punchAudio.play()
+          const targetPlayer = msg.payload.targetPlayer
+          const damage = msg.payload.effectiveDamage
+          log('you hit ' + targetPlayer.id + ' with damage ' + damage + ' which leads to players HP: ' + targetPlayer.hp)          
+        }
+
+        function playerRow(player){
+          return player.id + " ( HP: " + player.hp + " ) hitWord: <strong>" + player.hitWord + "</strong>"
+        }  
+
+        function processCurrentPlayers(msg){
+          const players = msg.payload.players
+          $('#players').empty()
+          Object.keys(players).forEach((key, index) => {
+            const player = players[key]
+            if (player.id !== socket.id){
+              $('#players')
+              .append($('<li>')
+              .attr("id", player.id)
+              .html(playerRow(player)));
+            } else {
+              setHP(player.hp)
+            }       
+          })
+        }
+
+        function processReceivedDamage(msg){
+          painAudio.play()
+          log('ouch! - you have received damage ' + msg.payload.damage + ' HP')
+        }
+
+        function processPlayerChange(msg){
+          if (msg.payload.player.id === socket.id) {
+            setHP(msg.payload.player.hp)
+          }
+          updatePlayerInPlayers(msg.payload.player.id, msg.payload.player)
+        }
+
+        function processPlayerLeftGame(msg){
+          log('player ' + msg.payload.playerId + ' left game')
+        }
+
+        function processPlayerDied(msg){
+          deathAudio.play()
+          const player = msg.payload.player
+          log('player ' + player.id + ' died')
+        }
+
+        function processHitFail(msg){
+          log(msg.payload.err)
+        }
+
+        function processYouDied(msg){
+          log('refresh tab to try again')
+          $('form').remove()
+          $('#player_hp').text(0)
+          socket.close()
+        }
+
+        function processMessage(msg){
+          console.log(msg)
+          switch(msg.type) {
+            case 'registerNewPlayerSuccess':
+              processRegisterNewPlayerSuccess(msg)
+              break
+            // playerList public events
+            case 'currentPlayers':
+              processCurrentPlayers(msg)
+              break
+            case 'playerLeftGame':
+              processPlayerLeftGame(msg)
+              break
+            case 'playerDied':
+              processPlayerDied(msg)
+              break
+            // private events
+            case 'hitSuccess':
+              processHitSuccess(msg)
+              break
+            case 'hitFail':
+              processHitFail(msg)
+              break
+            case 'receivedDamage':
+              processReceivedDamage(msg)
+              break
+            case 'playerChange':
+              processPlayerChange(msg)
+              break
+            case 'youDied':
+              processYouDied(msg)
+              break
+            default:
+                console.log('unable to find processor for event ' + msg.type)
+          }
+        }
+
+        $(function () {
+          $('form').submit(function(){
+            socket.emit('hit', { hitWord: $('#m').val() });
+            $('#m').val('');
+            return false;
+          });
+
+          socket.on('message', (msg) => {
+            processMessage(msg)
+          })
+
+          socket.on('disconnect', (msg) => {
+            processYouDied(null)
+          })
+        });
+      </script>
+     </div>
+  </body>
+</html>
