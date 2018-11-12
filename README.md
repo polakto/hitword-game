@@ -1,6 +1,17 @@
 # HitWord game
 
-Simply run server with
+Clone repo
+
+```
+git clone https://github.com/polakto/hitword-game
+```
+
+install dependencies
+```
+npm install
+```
+
+run server with
 
 ```
 npm start
