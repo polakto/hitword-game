@@ -3,11 +3,14 @@ var randomWord = require('./words')
 var Player = require('./player')
 var events = require('./events')
 
+const DEFAULT_INIT_HP = 45
+
 // Game represents one battleground where players can be registered to and emit events
 class Game {
     constructor(
         emitter,
-        logger
+        logger,
+        defaultHP = DEFAULT_INIT_HP
     ){
         const gameId = createHash(8)
         this.id = gameId
@@ -16,7 +19,7 @@ class Game {
         // hitWords contains list of all currently active hitWords
         this.hitWords = new Map()
         // initPlayerHP defines default HP set to newly registered player
-        this.initPlayerHP = 5
+        this.initPlayerHP = defaultHP
         // emitter serves as central point to emit information from game (for example socket io instance)
         this.emitter = emitter
         // logger
@@ -95,7 +98,6 @@ class Game {
             if (targetPlayer.hp <=0){
                 this.emit(targetPlayer.id, "message", events.createYouDied(targetPlayer.id, "you died!"))
                 this.emit(null, "message", events.createPlayerDied(targetPlayer))
-                // this.unregisterPlayer(targetPlayer.id)
                 return
             } else {
                 const newHitWord = this.randomUniqueWord()

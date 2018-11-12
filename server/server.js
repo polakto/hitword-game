@@ -5,7 +5,8 @@ var io = require('socket.io')(http);
 var Game  = require('../game/game');
 var winston = require('winston');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
+const GAME_DEFAULT_HP = process.env.GAME_DEFAULT_HP || 35
 
 const logger = winston.createLogger({
     transports: [
@@ -19,7 +20,11 @@ const logger = winston.createLogger({
     ]
 });
 
-const game = new Game(io, logger);
+const game = new Game(
+    io,
+    logger,
+    GAME_DEFAULT_HP
+);
 
 app.use(express.static('public'))
 app.get('/', function(req, res){

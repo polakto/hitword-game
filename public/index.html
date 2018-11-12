@@ -140,20 +140,10 @@
         function processMessage(msg){
           console.log(msg)
           switch(msg.type) {
+            // private events
             case 'registerNewPlayerSuccess':
               processRegisterNewPlayerSuccess(msg)
               break
-            // playerList public events
-            case 'currentPlayers':
-              processCurrentPlayers(msg)
-              break
-            case 'playerLeftGame':
-              processPlayerLeftGame(msg)
-              break
-            case 'playerDied':
-              processPlayerDied(msg)
-              break
-            // private events
             case 'hitSuccess':
               processHitSuccess(msg)
               break
@@ -168,6 +158,16 @@
               break
             case 'youDied':
               processYouDied(msg)
+              break
+            // public events
+            case 'currentPlayers':
+              processCurrentPlayers(msg)
+              break
+            case 'playerLeftGame':
+              processPlayerLeftGame(msg)
+              break
+            case 'playerDied':
+              processPlayerDied(msg)
               break
             default:
                 console.log('unable to find processor for event ' + msg.type)

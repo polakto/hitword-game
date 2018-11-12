@@ -6,6 +6,11 @@ Clone repo
 git clone https://github.com/polakto/hitword-game
 ```
 
+move to folder
+```
+cd hitword-game
+```
+
 install dependencies
 ```
 npm install
@@ -21,6 +26,8 @@ and then open localhost:{PORT} to enter the game.
 
 # Game
 Goal of game is to defeat other players by typing their hitWords to text input at the bottom of screen and send those to server. When player enters game, hitWord and init hit points are assigned. Then others try to hit him/her by typing and sending hitWords to server. When entered hitWord match hitWord assigned to player, number of targeted player HP is decreased by the length of typed word. When is HP less or equals zero, player dies.
+
+Game is for 2 and more players (locally player per tab).
 
 # Screen
 
