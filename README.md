@@ -41,3 +41,5 @@ Other online players on this server, your goal is to lower their HP to 0.
 Game log provides information about progress of game.
 
 RECOMMENDATION: Play game with sound on. :)
+
+Test
